@@ -1,6 +1,7 @@
 <script lang="ts">
     import * as Card from "$lib/components/ui/card/index.js";
     import { Button } from "$lib/components/ui/button/index.js";
+    import * as Dialog from "$lib/components/ui/dialog/index.js";
     import { goto } from "$app/navigation";
 
     // BREWING
@@ -67,6 +68,48 @@
             progress: 5,
             notes: [],
             drink: "Hot Chocolate",
+        },
+        {
+            task: "Learn to Rollerblade Backwards",
+            description: "Master the art of rollerblading backwards.",
+            steps: [
+                "Practice balancing on rollerblades.",
+                "Learn the 'V-stance' for stability.",
+                "Practice small backward pushes.",
+                "Develop the 'scissor' motion for backward movement.",
+                "Increase speed and control while skating backward.",
+                "Practice backward turns and stops.",
+                "Combine backward skating with forward skating.",
+            ],
+            progress: 4,
+            notes: [
+                "Balance was harder than expected at first.",
+                "Scissor motion clicked after a few tries.",
+                "Turning backwards is still a bit wobbly.",
+                "Fell once, but got right back up!",
+            ],
+            drink: "Smoothie", // Represents the smooth, gliding motion
+        },
+        {
+            task: "Play a Blues Solo on Trumpet",
+            description: "Learn to improvise a 12-bar blues solo on the trumpet.",
+            steps: [
+                "Learn the 12-bar blues chord progression.",
+                "Practice blues scales (major, minor, pentatonic).",
+                "Learn basic blues licks and phrases.",
+                "Practice improvising over the blues progression.",
+                "Develop phrasing and articulation.",
+                "Listen to and transcribe blues trumpet solos.",
+                "Perform a blues solo with a backing track.",
+            ],
+            progress: 2,
+            notes: [
+                "Chord progression took a while to memorize.",
+                "Improvising is challenging but fun.",
+                "Transcribing solos helped with phrasing.",
+                "Still need to improve my high notes.",
+            ],
+            drink: "Whiskey", // Represents the soulful, raw feel of blues music
         },
     ]
 
@@ -149,46 +192,70 @@
 
 </script>
 
-<main class="w-full h-full flex flex-col p-4 justify-center items-start overflow-auto">
-    <!-- USER CURRENTLY BREWING -->
-    <div class="flex flex-col justify-center mb-10">
-        <div class="mb-4 flex justify-between">
-            <h1 class="text-3xl">Brewing...</h1>
-            <Button on:click={() => goto("/brewery/new-brew")}>New Brew</Button>
-        </div>
-        <div class="grid grid-cols-2 w-full gap-4">
-            {#each MOCKBREWS as brew} 
-            <Card.Root>
-                <Card.Header>
-                    <Card.Title>{brew.drink}</Card.Title>
-                    <Card.Description>{brew.task}</Card.Description>
-                  </Card.Header>
-                  <Card.Content>
-                    <p>{brew.steps[brew.progress-1]}</p>
-                  </Card.Content>
-            </Card.Root>
-            {/each}
-        </div>
+<!-- USER CURRENTLY BREWING -->
+<div class="flex flex-col justify-center mb-10">
+    <div class="mb-4 flex justify-between">
+        <h1 class="text-3xl pl-2">Brewing...</h1>
+        <Button on:click={() => goto("/brewery/new-brew")}>New Brew</Button>
     </div>
-
-    <!-- BREW HISTORY -->
-    <div class="flex flex-col justify-center">
-        <div class="mb-4 flex justify-between">
-            <h1 class="text-3xl">Finished Brews</h1>
-        </div>
-        <div class="grid grid-cols-2 w-full gap-4">
-            {#each MOCKFINISHEDBREWS as brew} 
-            <Card.Root>
-                <Card.Header>
-                    <Card.Title>{brew.drink}</Card.Title>
-                    <Card.Description>{brew.task}</Card.Description>
-                  </Card.Header>
-                  <Card.Content>
-                    <p>{brew.notes.at(-1)}</p>
-                  </Card.Content>
-            </Card.Root>
-            {/each}
-        </div>
+    <div class="grid grid-cols-2 w-full gap-4">
+        {#each MOCKBREWS as brew} 
+        <Dialog.Root>
+            <Dialog.Trigger>
+                <Card.Root class="text-left w-full h-44 overflow-auto">
+                    <Card.Header>
+                        <Card.Title>{brew.drink}</Card.Title>
+                        <Card.Description>{brew.task}</Card.Description>
+                        </Card.Header>
+                        <Card.Content>
+                        <p>{brew.steps[brew.progress-1]}</p>
+                        </Card.Content>
+                </Card.Root>
+            </Dialog.Trigger>
+            <Dialog.Content>
+                <Dialog.Header>
+                <Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+                <Dialog.Description>
+                    This action cannot be undone. This will permanently delete your account
+                    and remove your data from our servers.
+                </Dialog.Description>
+                </Dialog.Header>
+            </Dialog.Content>
+            </Dialog.Root>
+        {/each}
     </div>
+</div>
 
-</main>
+<!-- BREW HISTORY -->
+<div class="flex flex-col justify-center h-full overflow-auto">
+    <div class="mb-4 flex justify-between">
+        <h1 class="text-3xl pl-2">Previous Brews</h1>
+    </div>
+    <div class="grid grid-cols-2 w-full gap-4">
+        {#each MOCKFINISHEDBREWS as brew} 
+        <Dialog.Root>
+                <Dialog.Trigger>
+                    <Card.Root class="text-left w-full h-44 overflow-auto">
+                        <Card.Header>
+                            <Card.Title>{brew.drink}</Card.Title>
+                            <Card.Description>{brew.task}</Card.Description>
+                        </Card.Header>
+                        <Card.Content>
+                            <p>{brew.notes.at(-1)}</p>
+                        </Card.Content>
+                    </Card.Root>
+                </Dialog.Trigger>
+            <Dialog.Content>
+                <Dialog.Header>
+                    <Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+                    <Dialog.Description>
+                    This action cannot be undone. This will permanently delete your account
+                    and remove your data from our servers.
+                    </Dialog.Description>
+                </Dialog.Header>
+            </Dialog.Content>
+        </Dialog.Root>
+        {/each}
+    </div>
+</div>
+

@@ -10,4 +10,11 @@ declare global {
 	}
 }
 
-export {};
+interface Brew {
+	task: string
+	description: string
+	steps: string[]
+	progress: number
+	notes: string[]
+	drink: string
+}

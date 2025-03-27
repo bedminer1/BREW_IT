@@ -18,3 +18,9 @@ interface Brew {
 	notes: string[]
 	drink: string
 }
+
+interface Message {
+	author: string
+	text: string
+	timeSent: Date
+}

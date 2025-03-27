@@ -25,7 +25,7 @@
     // sending to gemini, receiving ai response
     // edit task name, description, and steps
     // save and store in db
-
+    let messages: Message[] = $state([])
 </script>
 
 <!-- USER CURRENTLY BREWING -->
@@ -40,12 +40,12 @@
             </Dialog.Trigger>
             <Dialog.Content>
                 <Dialog.Header>
-                <Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-                <Dialog.Description>
-                    This action cannot be undone. This will permanently delete your account
-                    and remove your data from our servers.
-                </Dialog.Description>
+                <Dialog.Title>Add Task</Dialog.Title>
                 </Dialog.Header>
+
+                <div>
+
+                </div>
             </Dialog.Content>
         </Dialog.Root>
     </div>
@@ -134,10 +134,10 @@
         <h1 class="text-3xl pl-2">Previous Brews</h1>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 w-full gap-4">
-        {#each finishedBrews as brew} 
+        {#each finishedBrews as brew, id} 
         <Dialog.Root>
-                <Dialog.Trigger>
-                    <Card.Root class="text-left w-full h-44 overflow-auto">
+                <Dialog.Trigger class="focus:outline-none">
+                    <Card.Root class="text-left w-full h-44 overflow-auto focus:outline-none">
                         <Card.Header>
                             <Card.Title>{brew.drink}</Card.Title>
                             <Card.Description>{brew.task}</Card.Description>
@@ -149,11 +149,56 @@
                 </Dialog.Trigger>
             <Dialog.Content>
                 <Dialog.Header>
-                    <Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-                    <Dialog.Description>
-                    This action cannot be undone. This will permanently delete your account
-                    and remove your data from our servers.
-                    </Dialog.Description>
+                <Dialog.Title>{brew.task}</Dialog.Title>
+                <Dialog.Description>
+                    {brew.drink}
+                </Dialog.Description>
+                <div class="flex justify-between">
+                    <p>Step {brew.progress} out of {brew.steps.length}</p>
+
+                    <div class="flex justify-center gap-3">
+                        <Button disabled={brew.progress <= 1} on:click={() => finishedBrews[id].progress--} variant="outline">&#10094;</Button>
+                        <Button on:click={() => {
+                            finishedBrews[id].progress++
+                            }} variant={brew.progress === brew.steps.length ? "default" : "outline"}>&#10095;</Button>
+                    </div>
+                </div>
+                <div class="text-left">
+                    {#if brew.progress === 1}
+                    <p>{brew.steps[brew.progress-1]}</p>
+                    <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                    <p class="opacity-55">...</p>
+                    <p class="h-12"></p>
+                    {:else if brew.progress === 2}
+                    <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                    <p>{brew.steps[brew.progress-1]}</p>
+                    <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                    <p class="opacity-55">...</p>
+                    <p class="h-6"></p>
+                    {:else if brew.progress === brew.steps.length - 1}
+                    <p class="opacity-55">...</p>
+                    <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                    <p>{brew.steps[brew.progress-1]}</p>
+                    <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                    <p class="h-6"></p>
+                    {:else if brew.progress === brew.steps.length}
+                    <p class="opacity-55">...</p>
+                    <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                    <p>{brew.steps[brew.progress-1]}</p>
+                    <p class="h-12"></p>
+                    {:else}
+                    <p class="opacity-55">...</p>
+                    <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                    <p>{brew.steps[brew.progress-1]}</p>
+                    <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                    <p class="opacity-55">...</p>
+                    {/if}
+                </div>
+
+                <div class="flex gap-5">
+                    <Input></Input>
+                    <Button>Add Note</Button>
+                </div>
                 </Dialog.Header>
             </Dialog.Content>
         </Dialog.Root>

@@ -167,3 +167,20 @@ const MOCKFINISHEDBREWS: Brew[] = [
         ],
     },
 ]
+
+export const actions = {
+    sendMessage: async () => {
+        mockRepliesIndex++
+        return {
+            reply: MOCKREPLIES[mockRepliesIndex % 4],
+        }
+    }
+}
+
+let mockRepliesIndex = -1
+const MOCKREPLIES = [
+    "Testing first reply",
+    "Testing second reply",
+    "Testing third reply",
+    "Testing fourth reply",
+]

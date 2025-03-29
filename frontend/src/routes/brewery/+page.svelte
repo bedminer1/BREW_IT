@@ -3,13 +3,14 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import * as Dialog from "$lib/components/ui/dialog/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
+  import { enhance } from "$app/forms";
 
     // BREWING
     // fetch brewing tasks
     // brews will contain task name, description, 
     // steps(ingredients), progress(brewing time),
     // drinks(flavor notes eg espresso for hyped goals)
-    let { data } = $props()
+    let { data, form } = $props()
     let { brews, finishedBrews } = $state(data)
 
     let openStates = $state(brews.map(() => false))
@@ -25,7 +26,34 @@
     // sending to gemini, receiving ai response
     // edit task name, description, and steps
     // save and store in db
-    let messages: Message[] = $state([])
+    let messages: Message[] = $state([
+        {
+            author: "assistant",
+            text: "Hi, brew something new?",
+            timeSent: new Date(),
+        }
+    ])
+    let userMessage: string = $state("")
+    let assistantMessage = $derived(form?.reply)
+
+    async function handleSendMessage() {
+        const messageToSend = userMessage
+        setTimeout(()=>{
+            messages = [...messages, 
+                {
+                    author: "user",
+                    text: messageToSend,
+                    timeSent: new Date(),
+                },
+                {
+                    author: "assistant",
+                    text: assistantMessage ?? "message not found",
+                    timeSent: new Date(),
+                },
+            ]
+            userMessage = ""
+        }, 10)
+    }
 </script>
 
 <!-- USER CURRENTLY BREWING -->
@@ -43,9 +71,12 @@
                 <Dialog.Title>Add Task</Dialog.Title>
                 </Dialog.Header>
 
-                <div>
-
-                </div>
+                <form method="post" action="?/sendMessage" onsubmit={handleSendMessage} use:enhance>
+                    <div class="h-80">
+                        {JSON.stringify(messages)}
+                    </div>
+                    <Input bind:value={userMessage}></Input>
+                </form>
             </Dialog.Content>
         </Dialog.Root>
     </div>

@@ -3,7 +3,8 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import * as Dialog from "$lib/components/ui/dialog/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
-  import { enhance } from "$app/forms";
+    import { enhance } from "$app/forms";
+    import * as Tabs from "$lib/components/ui/tabs";
 
     // BREWING
     // fetch brewing tasks
@@ -45,14 +46,18 @@
                     text: messageToSend,
                     timeSent: new Date(),
                 },
-                {
+            ]
+            userMessage = ""
+        }, 10)
+        setTimeout(()=>{
+            messages = [...messages, 
+            {
                     author: "assistant",
                     text: assistantMessage ?? "message not found",
                     timeSent: new Date(),
                 },
             ]
-            userMessage = ""
-        }, 10)
+        }, 500)
     }
 </script>
 
@@ -68,15 +73,31 @@
             </Dialog.Trigger>
             <Dialog.Content>
                 <Dialog.Header>
-                <Dialog.Title>Add Task</Dialog.Title>
+                    <Dialog.Title>Add Task</Dialog.Title>
                 </Dialog.Header>
-
-                <form method="post" action="?/sendMessage" onsubmit={handleSendMessage} use:enhance>
-                    <div class="h-80">
-                        {JSON.stringify(messages)}
-                    </div>
-                    <Input bind:value={userMessage}></Input>
-                </form>
+                <Tabs.Root value="miko">
+                    <Tabs.List>
+                        <Tabs.Trigger value="miko">Miko</Tabs.Trigger>
+                        <Tabs.Trigger value="manual">Manual</Tabs.Trigger>
+                    </Tabs.List>
+                    <Tabs.Content value="miko">
+                        <form method="post" action="?/sendMessage" onsubmit={handleSendMessage} use:enhance>
+                            <div class="h-80 flex flex-col gap-4 overflow-auto mb-4">
+                                {#each messages as message}
+                                <div class="w-full mt-5 flex pr-5 {message.author === "assistant" ? "justify-start" : "justify-end"}">
+                                    <p>{message.text}</p>
+                                </div>
+                                {/each}
+                            </div>
+                            <Input bind:value={userMessage}></Input>
+                        </form>
+                    </Tabs.Content>
+                    <Tabs.Content value="manual">
+                        <div class="h-80">
+                            
+                        </div>
+                    </Tabs.Content>
+                </Tabs.Root>
             </Dialog.Content>
         </Dialog.Root>
     </div>

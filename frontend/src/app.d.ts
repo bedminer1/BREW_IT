@@ -24,3 +24,12 @@ interface Message {
 	text: string
 	timeSent: Date
 }
+
+interface User {
+	username: string
+	email: string
+	password: string // hashed
+	friends: number
+	prefersDarkMode: boolean
+	preferredLanguage: string
+}	

@@ -29,7 +29,7 @@ interface User {
 	username: string
 	email: string
 	password: string // hashed
-	friends: number
+	friends: User[]
 	prefersDarkMode: boolean
 	preferredLanguage: string
 }	

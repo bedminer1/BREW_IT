@@ -106,7 +106,7 @@
                                 </div>
                                 {/each}
                             </div>
-                            <Input bind:value={userMessage}></Input>
+                            <Input bind:value={userMessage} placeholder="Write a message to Miko"></Input>
                         </form>
                     </Tabs.Content>
                     <Tabs.Content value="manual">
@@ -235,7 +235,7 @@
 <!-- BREW HISTORY -->
 <div class="flex flex-col justify-center">
     <div class="mb-4 flex justify-between">
-        <h1 class="text-3xl pl-2">Previous Brews</h1>
+        <h1 class="text-3xl pl-2">Completed Brews</h1>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 w-full gap-4">
         {#each finishedBrews as brew, id} 

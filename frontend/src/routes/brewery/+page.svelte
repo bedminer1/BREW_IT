@@ -3,16 +3,31 @@
     import { Button } from "$lib/components/ui/button/index.js";
     import * as Dialog from "$lib/components/ui/dialog/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
-    import { enhance } from "$app/forms";
+    import * as Form from "$lib/components/ui/form";    
     import * as Tabs from "$lib/components/ui/tabs";
+    import { Textarea } from "$lib/components/ui/textarea";
+    import { superForm } from "sveltekit-superforms";
+    import { zodClient } from "sveltekit-superforms/adapters";
+    import { brewSchema, type BrewSchema } from "./brewSchema.js";
 
     // BREWING
     // fetch brewing tasks
     // brews will contain task name, description, 
     // steps(ingredients), progress(brewing time),
     // drinks(flavor notes eg espresso for hyped goals)
-    let { data, form } = $props()
+    let { data, form: messageForm } = $props()
     let { brews, finishedBrews } = $state(data)
+
+    const form = superForm(data.form, {
+        validators: zodClient(brewSchema),
+    })
+
+    const { form: formData, enhance } = form
+
+    let stepsTextarea = $state("")
+    $effect(() => {
+        $formData.steps = stepsTextarea.split("\n")
+    })
 
     let openStates = $state(brews.map(() => false))
     function finishBrew(id: number) {
@@ -30,12 +45,12 @@
     let messages: Message[] = $state([
         {
             author: "assistant",
-            text: "Hi, brew something new?",
+            text: "Hey! Brew something new?",
             timeSent: new Date(),
         }
     ])
     let userMessage: string = $state("")
-    let assistantMessage = $derived(form?.reply)
+    let assistantMessage = $derived(messageForm?.reply)
 
     async function handleSendMessage() {
         const messageToSend = userMessage
@@ -76,15 +91,17 @@
                     <Dialog.Title>Add Task</Dialog.Title>
                 </Dialog.Header>
                 <Tabs.Root value="miko">
-                    <Tabs.List>
+                    <Tabs.List class="mb-2">
                         <Tabs.Trigger value="miko">Miko</Tabs.Trigger>
                         <Tabs.Trigger value="manual">Manual</Tabs.Trigger>
                     </Tabs.List>
                     <Tabs.Content value="miko">
+            <!-- CHATBOX -->
+            <!-- TODO: add date, add form response -->
                         <form method="post" action="?/sendMessage" onsubmit={handleSendMessage} use:enhance>
                             <div class="h-80 flex flex-col gap-4 overflow-auto mb-4">
                                 {#each messages as message}
-                                <div class="w-full mt-5 flex pr-5 {message.author === "assistant" ? "justify-start" : "justify-end"}">
+                                <div class="w-full mb-5 flex pr-5 {message.author === "assistant" ? "justify-start" : "justify-end"}">
                                     <p>{message.text}</p>
                                 </div>
                                 {/each}
@@ -93,8 +110,43 @@
                         </form>
                     </Tabs.Content>
                     <Tabs.Content value="manual">
-                        <div class="h-80">
+            <!-- TODO: ADD MANUAL FORM -->
+                        <div class="h-96 overflow-auto">
+                            <form method="POST" action="?/sendNewTask" use:enhance>
+                                <Form.Field {form} name="drink" class="mb-4">
+                                    <Form.Control let:attrs>
+                                        <Form.Label>Drink</Form.Label>
+                                        <Input {...attrs} bind:value={$formData.drink} />
+                                    </Form.Control>
+                                    <Form.FieldErrors />
+                                </Form.Field>
+
+                                <Form.Field {form} name="task">
+                                    <Form.Control let:attrs>
+                                        <Form.Label>Task</Form.Label>
+                                        <Input {...attrs} bind:value={$formData.task} />
+                                    </Form.Control>
+                                    <Form.FieldErrors />
+                                </Form.Field>
                             
+                                <Form.Field {form} name="description">
+                                    <Form.Control let:attrs>
+                                        <Form.Label>Description</Form.Label>
+                                        <Input {...attrs} bind:value={$formData.description} />
+                                    </Form.Control>
+                                    <Form.FieldErrors />
+                                </Form.Field>
+
+                                <Form.Field {form} name="steps" class="mb-4">
+                                    <Form.Control let:attrs>
+                                        <Form.Label>Steps</Form.Label>
+                                        <Textarea {...attrs} bind:value={stepsTextarea} />
+                                    </Form.Control>
+                                    <Form.FieldErrors />
+                                </Form.Field>
+                            
+                                <Form.Button>Create Brew</Form.Button>
+                            </form>
                         </div>
                     </Tabs.Content>
                 </Tabs.Root>
@@ -139,33 +191,33 @@
                 </div>
                 <div class="text-left">
                     {#if brew.progress === 1}
-                    <p>{brew.steps[brew.progress-1]}</p>
-                    <p class="opacity-55">{brew.steps[brew.progress]}</p>
-                    <p class="opacity-55">...</p>
-                    <p class="h-12"></p>
+                        <p>{brew.steps[brew.progress-1]}</p>
+                        <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                        <p class="opacity-55">...</p>
+                        <p class="h-12"></p>
                     {:else if brew.progress === 2}
-                    <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
-                    <p>{brew.steps[brew.progress-1]}</p>
-                    <p class="opacity-55">{brew.steps[brew.progress]}</p>
-                    <p class="opacity-55">...</p>
-                    <p class="h-6"></p>
+                        <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                        <p>{brew.steps[brew.progress-1]}</p>
+                        <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                        <p class="opacity-55">...</p>
+                        <p class="h-6"></p>
                     {:else if brew.progress === brew.steps.length - 1}
-                    <p class="opacity-55">...</p>
-                    <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
-                    <p>{brew.steps[brew.progress-1]}</p>
-                    <p class="opacity-55">{brew.steps[brew.progress]}</p>
-                    <p class="h-6"></p>
+                        <p class="opacity-55">...</p>
+                        <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                        <p>{brew.steps[brew.progress-1]}</p>
+                        <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                        <p class="h-6"></p>
                     {:else if brew.progress === brew.steps.length}
-                    <p class="opacity-55">...</p>
-                    <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
-                    <p>{brew.steps[brew.progress-1]}</p>
-                    <p class="h-12"></p>
+                        <p class="opacity-55">...</p>
+                        <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                        <p>{brew.steps[brew.progress-1]}</p>
+                        <p class="h-12"></p>
                     {:else}
-                    <p class="opacity-55">...</p>
-                    <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
-                    <p>{brew.steps[brew.progress-1]}</p>
-                    <p class="opacity-55">{brew.steps[brew.progress]}</p>
-                    <p class="opacity-55">...</p>
+                        <p class="opacity-55">...</p>
+                        <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                        <p>{brew.steps[brew.progress-1]}</p>
+                        <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                        <p class="opacity-55">...</p>
                     {/if}
                 </div>
 

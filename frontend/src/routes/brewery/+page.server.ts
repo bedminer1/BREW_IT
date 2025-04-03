@@ -1,34 +1,23 @@
-import { superValidate } from "sveltekit-superforms";
+import { message, superValidate } from "sveltekit-superforms";
 import { brewSchema } from "./brewSchema";
+import { messageSchema } from "./messageSchema"
 import { zod } from "sveltekit-superforms/adapters";
 import { fail } from "@sveltejs/kit";
 
 
 export async function load({ fetch }) {
+  const messageForm = await superValidate(zod(messageSchema))
+  const brewForm = await superValidate(zod(brewSchema))
+
   return {
     brews: MOCKBREWS,
     finishedBrews: MOCKFINISHEDBREWS,
-    form: await superValidate(zod(brewSchema)),
+    messageForm,
+    brewForm
   };
 }
 
 const MOCKBREWS: Brew[] = [
-  {
-    task: "Half-Marathon Training Plan",
-    description: "Prepare for a half-marathon in 12 weeks.",
-    steps: [
-      "Week 1: Build base mileage (3 runs, 1 cross-train)",
-      "Week 2: Increase long run distance",
-      "Week 3: Incorporate speed work (intervals)",
-      "Week 4: Recovery week (reduced mileage)",
-      "Week 5-11: Progressive long runs, speed work, and tempo runs",
-      "Week 12: Taper week (reduce mileage, focus on rest)",
-      "Race Day: Run the half-marathon!",
-    ],
-    progress: 3,
-    notes: [],
-    drink: "Mocha",
-  },
   {
     task: "Brew It App - MVP Development",
     description:
@@ -180,35 +169,48 @@ const MOCKFINISHEDBREWS: Brew[] = [
 
 export const actions = {
   sendMessage: async ({ request }) => {
-    const form = await superValidate(request, zod(brewSchema))
-    mockRepliesIndex++;
-    return {
-      form,
-      reply: MOCKREPLIES[mockRepliesIndex % 4],
-    };
-  },
-  sendNewTask: async ({ request }) => {
-    const form = await superValidate(request, zod(brewSchema))
-    form.data.steps = form.data.steps[0].split('\n')
+    const messageForm = await superValidate(request, zod(messageSchema))
+    const userMessage = messageForm.data.userMessage
+    let reply = ""
 
-    if (!form.valid) {
+    switch (userMessage) {
+      case "I want to run a half-marathon":
+        reply = "Great! How many weeks do you have to prepare?"
+        break
+      case "12 weeks":
+        reply = "Perfect! Here's a detailed 12-week plan:\n" +
+                "1. Week 1: 3 runs (3-5 miles each), 1 cross-train (45 min).\n" +
+                "2. Week 2: Increase long run to 6 miles.\n" +
+                "3. Week 3: Add interval training (8x400m).\n" +
+                "4. Week 4: Reduce mileage for recovery.\n" +
+                "5. Weeks 5-11: Gradually increase long runs, add tempo runs (3-5 miles at race pace).\n" +
+                "6. Week 12: Reduce mileage, focus on rest, no hard runs.\n" +
+                "7. Race Day: Run the half-marathon! Does this sound like a good brew?"
+        break
+      default:
+        reply = "There is an error :( Please type that again";
+    }
+
+    return message(messageForm, reply)
+  },
+
+  sendNewTask: async ({ request }) => {
+    const brewForm = await superValidate(request, zod(brewSchema))
+    brewForm.data.steps = brewForm.data.steps[0].split('\n')
+    if (!brewForm.valid) {
       return fail(400, {
-        form,
+        brewForm,
       })
     }
 
-    console.log(form)
-
+    console.log(brewForm)
     return {
-        form,
+        brewForm,
     }
   },
 };
 
-let mockRepliesIndex = -1;
-const MOCKREPLIES = [
-  "Testing first reply",
-  "Testing second reply",
-  "Testing third reply",
-  "Testing fourth reply",
-];
+const MOCKREPLIES = {
+  "I want to run a half-marathon": "Great! How many weeks do you have to prepare?",
+  "12 weeks": "Perfect! Here's a detailed 12-week plan: 1. Week 1: 3 runs (3-5 miles each), 1 cross-train (45 min). 2. Week 2: Increase long run to 6 miles. 3. Week 3: Add interval training (8x400m). 4. Week 4: Reduce mileage for recovery. 5. Weeks 5-11: Gradually increase long runs, add tempo runs (3-5 miles at race pace). 6. Week 12: Reduce mileage, focus on rest, no hard runs. 7. Race Day: Run the half-marathon! Does this sound like a good brew?"
+}

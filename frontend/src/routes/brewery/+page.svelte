@@ -10,11 +10,7 @@
     import { zodClient } from "sveltekit-superforms/adapters";
     import { brewSchema, type BrewSchema } from "./brewSchema.js";
 
-    // BREWING
-    // fetch brewing tasks
-    // brews will contain task name, description, 
-    // steps(ingredients), progress(brewing time),
-    // drinks(flavor notes eg espresso for hyped goals)
+    // BREWS
     let { data, form: messageForm } = $props()
     let { brews, finishedBrews } = $state(data)
 
@@ -38,10 +34,6 @@
     }
 
     // CHATBOT/NEW BREW
-    // chatbox ui, text input and chat display
-    // sending to gemini, receiving ai response
-    // edit task name, description, and steps
-    // save and store in db
     let messages: Message[] = $state([
         {
             author: "assistant",
@@ -170,61 +162,76 @@
 
             </Dialog.Trigger>
             <Dialog.Content>
+                <Tabs.Root value="steps">
+                    <Tabs.List class="mb-6">
+                      <Tabs.Trigger value="steps">Overview</Tabs.Trigger>
+                      <Tabs.Trigger value="notes">Notes</Tabs.Trigger>
+                    </Tabs.List>
+                    <Tabs.Content value="steps">
+                        <Dialog.Title>{brew.task}</Dialog.Title>
+                        <Dialog.Description>
+                            {brew.drink}
+                        </Dialog.Description>
+                        <div class="flex justify-between">
+                            <p>Step {brew.progress} out of {brew.steps.length}</p>
+        
+                            <div class="flex justify-center gap-3">
+                                <Button disabled={brew.progress <= 1} on:click={() => brews[id].progress--} variant="outline">&#10094;</Button>
+                                <Button on:click={() => {
+                                    if (brew.progress === brew.steps.length) {
+                                        finishBrew(id)
+                                    } else {
+                                        brews[id].progress++
+                                    }
+                                    }} variant={brew.progress === brew.steps.length ? "default" : "outline"}>&#10095;</Button>
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            {#if brew.progress === 1}
+                                <p>{brew.steps[brew.progress-1]}</p>
+                                <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                                <p class="opacity-55">...</p>
+                                <p class="h-12"></p>
+                            {:else if brew.progress === 2}
+                                <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                                <p>{brew.steps[brew.progress-1]}</p>
+                                <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                                <p class="opacity-55">...</p>
+                                <p class="h-6"></p>
+                            {:else if brew.progress === brew.steps.length - 1}
+                                <p class="opacity-55">...</p>
+                                <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                                <p>{brew.steps[brew.progress-1]}</p>
+                                <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                                <p class="h-6"></p>
+                            {:else if brew.progress === brew.steps.length}
+                                <p class="opacity-55">...</p>
+                                <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                                <p>{brew.steps[brew.progress-1]}</p>
+                                <p class="h-12"></p>
+                            {:else}
+                                <p class="opacity-55">...</p>
+                                <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
+                                <p>{brew.steps[brew.progress-1]}</p>
+                                <p class="opacity-55">{brew.steps[brew.progress]}</p>
+                                <p class="opacity-55">...</p>
+                            {/if}
+                        </div>
+                    </Tabs.Content>
+                    <Tabs.Content value="notes">
+                        <div class="flex flex-col gap-3 mb-4">
+                            {#each brew.notes as note}
+                            <p>{note}</p>
+                            {/each}
+                        </div>
+                        <div class="flex gap-5">
+                            <Input></Input>
+                            <Button>Add Note</Button>
+                        </div>
+                    </Tabs.Content>
+                  </Tabs.Root>
                 <Dialog.Header>
-                <Dialog.Title>{brew.task}</Dialog.Title>
-                <Dialog.Description>
-                    {brew.drink}
-                </Dialog.Description>
-                <div class="flex justify-between">
-                    <p>Step {brew.progress} out of {brew.steps.length}</p>
 
-                    <div class="flex justify-center gap-3">
-                        <Button disabled={brew.progress <= 1} on:click={() => brews[id].progress--} variant="outline">&#10094;</Button>
-                        <Button on:click={() => {
-                            if (brew.progress === brew.steps.length) {
-                                finishBrew(id)
-                            } else {
-                                brews[id].progress++
-                            }
-                            }} variant={brew.progress === brew.steps.length ? "default" : "outline"}>&#10095;</Button>
-                    </div>
-                </div>
-                <div class="text-left">
-                    {#if brew.progress === 1}
-                        <p>{brew.steps[brew.progress-1]}</p>
-                        <p class="opacity-55">{brew.steps[brew.progress]}</p>
-                        <p class="opacity-55">...</p>
-                        <p class="h-12"></p>
-                    {:else if brew.progress === 2}
-                        <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
-                        <p>{brew.steps[brew.progress-1]}</p>
-                        <p class="opacity-55">{brew.steps[brew.progress]}</p>
-                        <p class="opacity-55">...</p>
-                        <p class="h-6"></p>
-                    {:else if brew.progress === brew.steps.length - 1}
-                        <p class="opacity-55">...</p>
-                        <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
-                        <p>{brew.steps[brew.progress-1]}</p>
-                        <p class="opacity-55">{brew.steps[brew.progress]}</p>
-                        <p class="h-6"></p>
-                    {:else if brew.progress === brew.steps.length}
-                        <p class="opacity-55">...</p>
-                        <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
-                        <p>{brew.steps[brew.progress-1]}</p>
-                        <p class="h-12"></p>
-                    {:else}
-                        <p class="opacity-55">...</p>
-                        <p class="opacity-55">{brew.steps[brew.progress-2]}</p>
-                        <p>{brew.steps[brew.progress-1]}</p>
-                        <p class="opacity-55">{brew.steps[brew.progress]}</p>
-                        <p class="opacity-55">...</p>
-                    {/if}
-                </div>
-
-                <div class="flex gap-5">
-                    <Input></Input>
-                    <Button>Add Note</Button>
-                </div>
                 </Dialog.Header>
             </Dialog.Content>
         </Dialog.Root>

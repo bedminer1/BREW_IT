@@ -190,7 +190,6 @@ export const actions = {
   sendNewTask: async ({ request }) => {
     const form = await superValidate(request, zod(brewSchema))
     form.data.steps = form.data.steps[0].split('\n')
-
     if (!form.valid) {
       return fail(400, {
         form,

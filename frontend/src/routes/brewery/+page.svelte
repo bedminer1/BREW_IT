@@ -8,23 +8,23 @@
     import { Textarea } from "$lib/components/ui/textarea";
     import { superForm } from "sveltekit-superforms";
     import { zodClient } from "sveltekit-superforms/adapters";
-    import { brewSchema, type BrewSchema } from "./brewSchema.js";
+    import { brewSchema } from "./brewSchema.js";
+    import { messageSchema } from "./messageSchema.js"
 
-    // BREWS
-    let { data, form: messageForm } = $props()
-    let { brews, finishedBrews } = $state(data)
+    // BREWFORM
+    let { data } = $props()
+    let { brews, finishedBrews, brewForm, messageForm } = $state(data)
 
-    const form = superForm(data.form, {
+    const form = superForm(brewForm, {
         validators: zodClient(brewSchema),
     })
-
     const { form: formData, enhance } = form
 
     let stepsTextarea = $state("")
     $effect(() => {
         $formData.steps = stepsTextarea.split("\n")
     })
-
+    
     let openStates = $state(brews.map(() => false))
     function finishBrew(id: number) {
         finishedBrews = [...finishedBrews, brews[id]]
@@ -34,6 +34,11 @@
     }
 
     // CHATBOT/NEW BREW
+    const messageSuperForm = superForm(messageForm, {
+        validators: zodClient(messageSchema)
+    })
+    const { form: messageFormData, message: messageMessage, enhance: messageEnhance } = messageSuperForm
+
     let messages: Message[] = $state([
         {
             author: "assistant",
@@ -41,30 +46,93 @@
             timeSent: new Date(),
         }
     ])
-    let userMessage: string = $state("")
-    let assistantMessage = $derived(messageForm?.reply)
-
+    
+    let openAddBrewDialog = $state(false)
     async function handleSendMessage() {
-        const messageToSend = userMessage
-        setTimeout(()=>{
+        messages = [...messages, 
+            {
+                author: "user",
+                text: $messageFormData.userMessage,
+                timeSent: new Date(),
+            },
+        ]
+
+        let reply = ""
+        switch ($messageFormData.userMessage) {
+            case "I want to run a half-marathon":
+                reply = "Great! How many weeks do you have to prepare?"
+                break
+            case "12":
+                reply = "Perfect! Here's a detailed 12-week plan:\n" +
+                        "1. Week 1: 3 runs (3-5 miles each), 1 cross-train (45 min).\n" +
+                        "2. Week 2: Increase long run to 6 miles.\n" +
+                        "3. Week 3: Add interval training (8x400m).\n" +
+                        "4. Week 4: Reduce mileage for recovery.\n" +
+                        "5. Weeks 5-11: Gradually increase long runs, add tempo runs (3-5 miles at race pace).\n" +
+                        "6. Week 12: Reduce mileage, focus on rest, no hard runs.\n" +
+                        "7. Race Day: Run the half-marathon! Does this sound like a good brew?"
+                break
+            case "yes":
+                reply = "Creating brew..."
+                break
+            default:
+                reply = "There is an error :( Please type that again";
+        }
+
+        setTimeout(() => {
             messages = [...messages, 
                 {
-                    author: "user",
-                    text: messageToSend,
-                    timeSent: new Date(),
-                },
-            ]
-            userMessage = ""
-        }, 10)
-        setTimeout(()=>{
-            messages = [...messages, 
-            {
                     author: "assistant",
-                    text: assistantMessage ?? "message not found",
+                    text: reply,
                     timeSent: new Date(),
                 },
             ]
-        }, 500)
+        }, 1000);
+
+        if ($messageFormData.userMessage === "yes") {
+            brews = [...brews, 
+                {
+                    task: "Half-Marathon Training Plan",
+                    description: "Prepare for a half-marathon in 12 weeks.",
+                    steps: [
+                        "Week 1: 3 runs (3-5 miles each), 1 cross-train (45 min).",
+                        "Week 2: Increase long run to 6 miles.",
+                        "Week 3: Add interval training (8x400m).",
+                        "Week 4: Reduce mileage for recovery.",
+                        "Weeks 5-11: Gradually increase long runs, add tempo runs (3-5 miles at race pace).",
+                        "Week 12: Reduce mileage, focus on rest, no hard runs.",
+                        "Race Day: Run the half-marathon!",
+                    ],
+                    drink: "Mocha",
+                    notes: [],
+                    progress: 1,
+                }
+            ]
+
+            setTimeout(() => {
+                openAddBrewDialog = false
+                messages = [
+                    {
+                        author: "assistant",
+                        text: "Hey! Brew something new?",
+                        timeSent: new Date(),
+                    }
+                ]
+            }, 2000)
+        } 
+    }
+
+
+    function handleCreateNewBrew() {
+        stepsTextarea = ""
+        brews = [...brews, {
+            task: $formData.task,
+            description: $formData.description,
+            steps: $formData.steps,
+            drink: $formData.drink,
+            notes: [],
+            progress: 1,
+        }]
     }
 </script>
 
@@ -74,7 +142,7 @@
         <h1 class="text-3xl pl-2">Brewing...</h1>
 
 <!-- NEW BREW -->
-        <Dialog.Root>
+        <Dialog.Root bind:open={openAddBrewDialog}>
             <Dialog.Trigger>
                 <Button>New Brew</Button>
             </Dialog.Trigger>
@@ -90,25 +158,28 @@
                     <Tabs.Content value="miko">
             <!-- CHATBOX -->
             <!-- TODO: add date, add form response -->
-                        <form method="post" action="?/sendMessage" onsubmit={handleSendMessage} use:enhance>
+                        <form method="post" action="?/sendMessage" onsubmit={handleSendMessage} use:messageEnhance>
                             <div class="h-80 flex flex-col gap-4 overflow-auto mb-4">
                                 {#each messages as message}
-                                <div class="w-full mb-5 flex pr-5 {message.author === "assistant" ? "justify-start" : "justify-end"}">
-                                    <p>{message.text}</p>
+                                <div class="w-full mb-5 pr-5 flex {message.author === "assistant" ? "justify-start" : "justify-end"}">
+                                    <div class="flex flex-col {message.author === "assistant" ? "items-start" : "items-end"}">
+                                        <p>{message.text}</p>
+                                        <p class="text-xs italic text-gray-500">{message.timeSent.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</p>
+                                    </div>
                                 </div>
                                 {/each}
                             </div>
-                            <Input bind:value={userMessage} placeholder="Write a message to Miko"></Input>
+                            <Input name="userMessage" bind:value={$messageFormData.userMessage} placeholder="Write a message to Miko" autocomplete="off"></Input>
                         </form>
                     </Tabs.Content>
                     <Tabs.Content value="manual">
             <!-- TODO: ADD MANUAL FORM -->
                         <div class="h-96 overflow-auto">
-                            <form method="POST" action="?/sendNewTask" use:enhance>
+                            <form method="POST" action="?/sendNewTask" use:enhance onsubmit={handleCreateNewBrew}>
                                 <Form.Field {form} name="drink" class="mb-4">
                                     <Form.Control let:attrs>
                                         <Form.Label>Drink</Form.Label>
-                                        <Input {...attrs} bind:value={$formData.drink} />
+                                        <Input {...attrs} bind:value={$formData.drink} autocomplete="off" />
                                     </Form.Control>
                                     <Form.FieldErrors />
                                 </Form.Field>
@@ -116,7 +187,7 @@
                                 <Form.Field {form} name="task">
                                     <Form.Control let:attrs>
                                         <Form.Label>Task</Form.Label>
-                                        <Input {...attrs} bind:value={$formData.task} />
+                                        <Input {...attrs} bind:value={$formData.task} autocomplete="off" />
                                     </Form.Control>
                                     <Form.FieldErrors />
                                 </Form.Field>
@@ -124,7 +195,7 @@
                                 <Form.Field {form} name="description">
                                     <Form.Control let:attrs>
                                         <Form.Label>Description</Form.Label>
-                                        <Input {...attrs} bind:value={$formData.description} />
+                                        <Input {...attrs} bind:value={$formData.description} autocomplete="off" />
                                     </Form.Control>
                                     <Form.FieldErrors />
                                 </Form.Field>

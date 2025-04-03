@@ -25,6 +25,7 @@
         $formData.steps = stepsTextarea.split("\n")
     })
     
+    // svelte-ignore state_referenced_locally
     let openStates = $state(brews.map(() => false))
     function finishBrew(id: number) {
         finishedBrews = [...finishedBrews, brews[id]]
@@ -48,6 +49,7 @@
     ])
     
     let openAddBrewDialog = $state(false)
+    let chatContainer: HTMLDivElement
     async function handleSendMessage() {
         messages = [...messages, 
             {
@@ -56,6 +58,9 @@
                 timeSent: new Date(),
             },
         ]
+        setTimeout(() => {
+            chatContainer.scrollTop = chatContainer.scrollHeight
+        }, 1)
 
         let reply = ""
         switch ($messageFormData.userMessage) {
@@ -70,13 +75,13 @@
                         "4. Week 4: Reduce mileage for recovery.\n" +
                         "5. Weeks 5-11: Gradually increase long runs, add tempo runs (3-5 miles at race pace).\n" +
                         "6. Week 12: Reduce mileage, focus on rest, no hard runs.\n" +
-                        "7. Race Day: Run the half-marathon! Does this sound like a good brew?"
+                        "7. Race Day: Run the half-marathon! \n Does this sound like a good brew?"
                 break
             case "yes":
                 reply = "Creating brew..."
                 break
             default:
-                reply = "There is an error :( Please type that again";
+                reply = "There was an error :( Please try that again";
         }
 
         setTimeout(() => {
@@ -87,7 +92,11 @@
                     timeSent: new Date(),
                 },
             ]
-        }, 1000);
+            
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight
+            }, 1)
+        }, 1000)
 
         if ($messageFormData.userMessage === "yes") {
             brews = [...brews, 
@@ -120,6 +129,10 @@
                 ]
             }, 2000)
         } 
+    }
+
+    function formatMessage(text: string): string {
+        return text.replace(/\n/g, '<br>');
     }
 
 
@@ -157,13 +170,12 @@
                     </Tabs.List>
                     <Tabs.Content value="miko">
             <!-- CHATBOX -->
-            <!-- TODO: add date, add form response -->
                         <form method="post" action="?/sendMessage" onsubmit={handleSendMessage} use:messageEnhance>
-                            <div class="h-80 flex flex-col gap-4 overflow-auto mb-4">
+                            <div bind:this={chatContainer} class="h-80 flex flex-col gap-4 overflow-auto mb-4">
                                 {#each messages as message}
                                 <div class="w-full mb-5 pr-5 flex {message.author === "assistant" ? "justify-start" : "justify-end"}">
                                     <div class="flex flex-col {message.author === "assistant" ? "items-start" : "items-end"}">
-                                        <p>{message.text}</p>
+                                        <p>{@html formatMessage(message.text)}</p>
                                         <p class="text-xs italic text-gray-500">{message.timeSent.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</p>
                                     </div>
                                 </div>

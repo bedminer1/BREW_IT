@@ -146,6 +146,8 @@
             notes: [],
             progress: 1,
         }]
+
+        openAddBrewDialog = false
     }
 </script>
 
@@ -165,7 +167,7 @@
                 </Dialog.Header>
                 <Tabs.Root value="miko">
                     <Tabs.List class="mb-2">
-                        <Tabs.Trigger value="miko">Miko</Tabs.Trigger>
+                        <Tabs.Trigger value="miko">Mikko</Tabs.Trigger>
                         <Tabs.Trigger value="manual">Manual</Tabs.Trigger>
                     </Tabs.List>
                     <Tabs.Content value="miko">
@@ -219,8 +221,10 @@
                                     </Form.Control>
                                     <Form.FieldErrors />
                                 </Form.Field>
-                            
-                                <Form.Button>Create Brew</Form.Button>
+                                
+                                <div class="flex justify-end">
+                                    <Form.Button>Create Brew</Form.Button>
+                                </div>
                             </form>
                         </div>
                     </Tabs.Content>

@@ -1,4 +1,4 @@
-import { superValidate } from 'sveltekit-superforms';
+import { message, superValidate } from 'sveltekit-superforms';
 import { yup } from 'sveltekit-superforms/adapters';
 import { object, string } from 'yup';
 import type { RequestEvent } from '@sveltejs/kit';
@@ -38,7 +38,7 @@ export const actions = {
         };
       }
 
-      return { form };
+      return message(form, "success");
     } catch (error) {
       console.error('Action error:', error);
       throw error;
